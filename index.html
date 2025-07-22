@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&display=swap"
+        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Unbounded:wght@700&family=Cascadia+Code:wght@400&display=swap"
+        rel="stylesheet">
+    <title>FONTT - The Ultimate Font Discovery Tool</title>
+</head>
+
+<body>
+    <div class="top-container">
+        <h1>FontFIT</h1>
+    </div>
+    <nav>
+        <div class="main-nav">
+            <ul>
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#about-section">About</a></li>
+                <li><a href="#font-display-section">Explore</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="search-area">
+        <input type="text" name="search-place" id="search" placeholder="Search your fonts.....">
+    </div>
+    <section>
+        <div class="hero-section">
+            <div class="hero-content">
+                <h2 class="hero-title">Discover Your Perfect Font</h2>
+                <p class="hero-subtitle">FontFIT helps you explore, preview, and choose the best fonts for your next
+                    project.</p>
+                <a href="#font-display-section" class="hero-btn">Explore Fonts</a>
+            </div>
+        </div>
+    </section>
+    <section id="about-section">
+        <div class="about-content-wrapper">
+            <h2 class="section-title">About FontFIT</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>Welcome to FontFIT, the ultimate tool for discovering and exploring fonts. Our mission is to
+                        provide designers, developers, and typography enthusiasts with a powerful and intuitive platform
+                        to find the perfect typeface for any project.</p>
+                    <p>At FontFIT, you can browse a vast collection of fonts, preview them in real-time with your own
+                        text, and easily compare different styles. We believe that great typography is at the heart of
+                        great design, and we're here to help you make the right choice, every time.</p>
+                </div>
+            </div>
+            <button class="learn-more">
+                <span class="circle" aria-hidden="true">
+                    <span class="icon arrow"></span>
+                </span>
+                <span class="button-text">Learn More</span>
+            </button>
+        </div>
+    </section>
+    <section>
+        <div class="brands-fonts">
+            <h2 class="section-title">Discover Fonts From World's Top Brands</h2>
+            <div class="brand-logos">
+                <div class="google-fonts brand-item">
+                    <img class="brand-logo"
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Google_Fonts_logo.svg/1280px-Google_Fonts_logo.svg.png"
+                        alt="Google Fonts logo">
+                </div>
+                <div class="monotype-fonts brand-item">
+                    <img class="brand-logo" src="https://www.monotype.com/themes/custom/monotype/logo.svg"
+                        alt="Monotype Fonts logo">
+                </div>
+                <div class="adobe-fonts brand-item">
+                    <img class="brand-logo" src="adobe-may-2020-Photoroom.png" alt="adobe Fonts logo">
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="font-display-section">
+        <h2 class="section-title">Explore Fonts</h2>
+        <div class="filter-controls">
+            <div class="filter-group">
+                <span class="filter-label">Source</span>
+                <div class="filter-options" id="source-filters">
+                    <button class="filter-btn active" data-filter-group="source" data-filter-value="all">All</button>
+                    <button class="filter-btn" data-filter-group="source" data-filter-value="Google Fonts">Google Fonts</button>
+                    <button class="filter-btn" data-filter-group="source" data-filter-value="Adobe Fonts">Adobe Fonts</button>
+                    <button class="filter-btn" data-filter-group="source" data-filter-value="Other">Other</button>
+                </div>
+            </div>
+        </div>
+        <div class="font-grid" id="font-grid">
+            <!-- Fonts will be dynamically loaded here -->
+        </div>
+        <div class="pagination-controls">
+            <button id="prev-page" disabled>Previous</button>
+            <span id="page-indicator"></span>
+            <button id="next-page">Next</button>
+        </div>
+    </section>
+
+    <!-- Font Detail Modal -->
+    <div id="font-detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            <h2 id="modal-font-name">Font Name</h2>
+            <div class="modal-preview">
+                <p id="modal-sample-text" contenteditable="true">The quick brown fox jumps over the lazy dog.</p>
+            </div>
+            <div class="modal-controls">
+                <label for="font-size-slider">Font Size:</label>
+                <input type="range" id="font-size-slider" min="12" max="150" value="48">
+                <span id="font-size-value">48px</span>
+            </div>
+             <div class="modal-footer">
+                <a id="modal-font-link" href="#" target="_blank" rel="noopener noreferrer" class="font-source-link">View on Source</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 FontFIT. All rights reserved.</p>
+            <div class="social-media">
+                <a href="#"><i data-lucide="github"></i></a>
+                <a href="#"><i data-lucide="twitter"></i></a>
+                <a href="#"><i data-lucide="instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+    <script src="index.js"></script>
+</body>
+
+</html>
