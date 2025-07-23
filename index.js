@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const exploreBtn = document.querySelector('.hero-btn');
     const navExploreLink = document.querySelector('nav a[href="#font-display-section"]');
     const filterControls = document.querySelector('.filter-controls');
+    const globalSampleTextInput = document.getElementById('global-sample-text');
 
     // Modal elements
     const modal = document.getElementById('font-detail-modal');
@@ -15,8 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalFontLink = document.getElementById('modal-font-link');
     const modalOverlay = document.querySelector('.modal-overlay');
 
+    let cardObserver;
+    let favorites = [];
+    let loadedFontFamilies = new Set();
+    let currentSampleText = 'The quick brown fox jumps over the lazy dog.';
     let currentFilters = {
-        source: 'all'
+        source: 'all',
+        category: 'all',
+        show: 'all'
     };
 
     // For a real application, you would fetch this list from the Google Fonts API.
@@ -185,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { family: 'Cedarville Cursive', source: 'Google Fonts', category: 'handwriting', url: 'https://fonts.google.com/specimen/Cedarville+Cursive' },
         { family: 'La Belle Aurore', source: 'Google Fonts', category: 'handwriting', url: 'https://fonts.google.com/specimen/La+Belle+Aurore' },
 
-        // MORE Google Fonts - Monospace
+            // MORE Google Fonts - Monospace
         { family: 'Roboto Mono', source: 'Google Fonts', category: 'monospace', url: 'https://fonts.google.com/specimen/Roboto+Mono' },
         { family: 'Inconsolata', source: 'Google Fonts', category: 'monospace', url: 'https://fonts.google.com/specimen/Inconsolata' },
         { family: 'Share Tech Mono', source: 'Google Fonts', category: 'monospace', url: 'https://fonts.google.com/specimen/Share+Tech+Mono' },
@@ -202,21 +209,80 @@ document.addEventListener('DOMContentLoaded', () => {
         { family: 'GT America', source: 'Other', category: 'sans-serif', url: 'https://www.grillitype.com/font/gt-america' }
     ];
 
-    const fontsPerPage = 10;
+    const fontsPerPage = 10; // Changed to 10 to show 2 rows of 5
     let currentPage = 1;
 
     const prevBtn = document.getElementById('prev-page');
     const nextBtn = document.getElementById('next-page');
     const pageIndicator = document.getElementById('page-indicator');
 
+    // --- Favorites Functions ---
+    function loadFavorites() {
+        favorites = JSON.parse(localStorage.getItem('fontfit_favorites')) || [];
+    }
+
+    function saveFavorites() {
+        localStorage.setItem('fontfit_favorites', JSON.stringify(favorites));
+    }
+
+    function toggleFavorite(fontFamily, btnElement) {
+        const index = favorites.indexOf(fontFamily);
+        const isCurrentlyFavorited = index > -1;
+
+        if (isCurrentlyFavorited) {
+            favorites.splice(index, 1);
+        } else {
+            favorites.push(fontFamily);
+        }
+        saveFavorites();
+
+        // If we are in the "My Favorites" view and just unfavorited a font,
+        // we must re-render the list to remove the card.
+        if (currentFilters.show === 'favorites' && isCurrentlyFavorited) {
+            displayFonts();
+            return; // Exit early
+        }
+
+        // Otherwise, we can just toggle the class on the button for an
+        // instant visual update without re-rendering the whole grid.
+        if (btnElement) {
+            btnElement.classList.toggle('favorited', !isCurrentlyFavorited);
+        }
+    }
+
     function getFilteredFonts() {
         const searchTerm = searchInput.value.toLowerCase();
+        
+        let sourceFonts = fonts;
+        // First, filter by favorites if that view is selected
+        if (currentFilters.show === 'favorites') {
+            sourceFonts = fonts.filter(font => favorites.includes(font.family));
+        }
 
-        return fonts.filter(font => {
+        // Then, apply the other filters on the result
+        return sourceFonts.filter(font => {
             const matchesSearch = font.family.toLowerCase().includes(searchTerm);
             const matchesSource = currentFilters.source === 'all' || font.source === currentFilters.source;
-            return matchesSearch && matchesSource;
+            const matchesCategory = currentFilters.category === 'all' || font.category === currentFilters.category;
+            return matchesSearch && matchesSource && matchesCategory;
         });
+    }
+
+    function setupFontCardObserver() {
+        const options = {
+            root: null, // Use the viewport as the root
+            rootMargin: '0px 0px -50px 0px', // Trigger animation a bit early
+            threshold: 0.1 // Trigger when 10% of the card is visible
+        };
+
+        cardObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Animate only once
+                }
+            });
+        }, options);
     }
 
     function displayFonts() {
@@ -228,29 +294,76 @@ document.addEventListener('DOMContentLoaded', () => {
         const endIdx = startIdx + fontsPerPage;
         const fontsToDisplay = filteredFonts.slice(startIdx, endIdx);
 
-        fontsToDisplay.forEach(font => {
-            const fontFamilyQuery = getFontFamilyForAPI(font);
-            // Load the font from Google Fonts
+        // --- Performance Improvement: Batch Font Loading ---
+        const fontsToLoad = fontsToDisplay
+            .filter(font => !loadedFontFamilies.has(font.family))
+            .map(font => `family=${getFontFamilyForAPI(font)}`);
+
+        if (fontsToLoad.length > 0) {
             const fontLink = document.createElement('link');
             fontLink.rel = 'stylesheet';
-            fontLink.href = `https://fonts.googleapis.com/css2?family=${fontFamilyQuery}&display=swap`;
+            // Google Fonts API can handle multiple families in one request
+            fontLink.href = `https://fonts.googleapis.com/css2?${fontsToLoad.join('&')}&display=swap`;
             document.head.appendChild(fontLink);
+            
+            // Add the newly requested fonts to our set of loaded fonts
+            fontsToDisplay.forEach(font => loadedFontFamilies.add(font.family));
+        }
 
+        fontsToDisplay.forEach((font, index) => {
             // Create the font card
             const fontCard = document.createElement('div');
             fontCard.className = 'font-card';
 
+            // Staggered animation delay
+            fontCard.style.transitionDelay = `${index * 100}ms`;
+
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'font-card-header';
+
             const fontName = document.createElement('h3');
             fontName.textContent = font.family;
             fontName.style.fontFamily = `'${font.family.split(' (')[0]}', sans-serif`;
+            fontName.title = 'Click to copy font name'; // Add a helpful tooltip
+
+            const favoriteBtn = document.createElement('button');
+            favoriteBtn.className = 'favorite-btn';
+            // Using an SVG for the star icon for easy styling
+            favoriteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
+            if (favorites
+                .includes(font.family)) {
+                favoriteBtn.classList.add('favorited');
+            }
+            favoriteBtn.addEventListener('click', (e) => {
+                // Pass the button element for targeted DOM updates
+                toggleFavorite(font.family, e.currentTarget);
+            });
+            // Add click-to-copy functionality
+            fontName.addEventListener('click', () => {
+                navigator.clipboard.writeText(font.family).then(() => {
+                    const originalText = fontName.textContent;
+                    fontName.textContent = 'Copied!';
+                    fontName.classList.add('copied');
+
+                    setTimeout(() => {
+                        fontName.textContent = originalText;
+                        fontName.classList.remove('copied');
+                    }, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy font name:', err);
+                });
+            });
 
             const sampleText = document.createElement('p');
             sampleText.className = 'font-sample';
-            sampleText.textContent = 'The quick brown fox jumps over the lazy dog.';
+            sampleText.textContent = currentSampleText;
             sampleText.style.fontFamily = `'${font.family.split(' (')[0]}', sans-serif`;
             sampleText.contentEditable = true;
 
-            fontCard.appendChild(fontName);
+            cardHeader.appendChild(fontName);
+            cardHeader.appendChild(favoriteBtn);
+            fontCard.appendChild(cardHeader);
             fontCard.appendChild(sampleText);
 
             if (font.url) {
@@ -275,6 +388,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             fontGrid.appendChild(fontCard);
+
+            // Observe the newly created card for the animation
+            if (cardObserver) {
+                cardObserver.observe(fontCard);
+            }
         });
 
         // Update pagination controls
@@ -332,6 +450,17 @@ document.addEventListener('DOMContentLoaded', () => {
         displayFonts();
     });
 
+    globalSampleTextInput.addEventListener('input', () => {
+        const newText = globalSampleTextInput.value.trim();
+        // Use the default text if the input is empty, otherwise use the new text.
+        currentSampleText = newText === '' ? 'The quick brown fox jumps over the lazy dog.' : newText;
+
+        // Update all visible font cards in real-time
+        document.querySelectorAll('.font-sample').forEach(p => {
+            p.textContent = currentSampleText;
+        });
+    });
+
     filterControls.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-btn')) {
             const btn = e.target;
@@ -379,22 +508,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initial display of all fonts
+    loadFavorites();
+    setupFontCardObserver();
     displayFonts();
-});
 
-document.addEventListener("DOMContentLoaded", () => {
+    // --- About Section & Learn More ---
+
     const aboutSection = document.getElementById('about-section');
+    const learnMoreBtn = document.querySelector('.learn-more');
+    const moreAboutText = document.querySelector('.about-text .more-about-text');
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                aboutSection.classList.add('visible');
-                observer.unobserve(entry.target);
+    // Intersection Observer for About Section fade-in
+    if (aboutSection) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    aboutSection.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+        observer.observe(aboutSection);
+    }
+
+    // "Learn More" button functionality
+    if (learnMoreBtn && moreAboutText) {
+        const buttonText = learnMoreBtn.querySelector('.button-text');
+
+        learnMoreBtn.addEventListener('click', () => {
+            // Toggle the visibility of the extra text
+            const isNowVisible = moreAboutText.classList.toggle('show');
+
+            // Update the button text based on the new state
+            if (buttonText) {
+                buttonText.textContent = isNowVisible ? 'Show Less' : 'Learn More';
             }
         });
-    }, {
-        threshold: 0.1
-    });
+    }
 
-    observer.observe(aboutSection);
+    // --- Back to Top Button ---
+    const backToTopBtn = document.getElementById('back-to-top-btn');
+
+    if (backToTopBtn) {
+        // Show/hide button on scroll
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) { // Show button after scrolling 400px
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+
+        // Scroll to top on click
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 });

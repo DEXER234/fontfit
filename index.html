@@ -22,7 +22,7 @@
 
 <body>
     <div class="top-container">
-        <h1>FontFIT</h1>
+        <h1 class="main-title">FontFIT</h1>
     </div>
     <nav>
         <div class="main-nav">
@@ -55,8 +55,8 @@
                         provide designers, developers, and typography enthusiasts with a powerful and intuitive platform
                         to find the perfect typeface for any project.</p>
                     <p>At FontFIT, you can browse a vast collection of fonts, preview them in real-time with your own
-                        text, and easily compare different styles. We believe that great typography is at the heart of
-                        great design, and we're here to help you make the right choice, every time.</p>
+                        text, and easily compare different styles. We believe that great typography is at the heart of great design, and we're here to help you make the right choice, every time.</p>
+                    <p class="more-about-text">This project is a demonstration of modern web development techniques, including dynamic font loading, responsive design, and interactive UI elements. It leverages the Google Fonts API to provide a rich selection of typefaces. Explore the code to see how it all comes together!</p>
                 </div>
             </div>
             <button class="learn-more">
@@ -98,6 +98,28 @@
                     <button class="filter-btn" data-filter-group="source" data-filter-value="Other">Other</button>
                 </div>
             </div>
+            <div class="filter-group">
+                <span class="filter-label">Category</span>
+                <div class="filter-options" id="category-filters">
+                    <button class="filter-btn active" data-filter-group="category" data-filter-value="all">All</button>
+                    <button class="filter-btn" data-filter-group="category" data-filter-value="sans-serif">Sans-serif</button>
+                    <button class="filter-btn" data-filter-group="category" data-filter-value="serif">Serif</button>
+                    <button class="filter-btn" data-filter-group="category" data-filter-value="display">Display</button>
+                    <button class="filter-btn" data-filter-group="category" data-filter-value="monospace">Monospace</button>
+                    <button class="filter-btn" data-filter-group="category" data-filter-value="handwriting">Handwriting</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Show</span>
+                <div class="filter-options" id="show-filters">
+                    <button class="filter-btn active" data-filter-group="show" data-filter-value="all">All Fonts</button>
+                    <button class="filter-btn" data-filter-group="show" data-filter-value="favorites">My Favorites</button>
+                </div>
+            </div>
+        </div>
+        <div class="global-text-control">
+            <label for="global-sample-text" class="sr-only">Preview Text</label>
+            <input type="text" id="global-sample-text" placeholder="Type to preview your text on all fonts...">
         </div>
         <div class="font-grid" id="font-grid">
             <!-- Fonts will be dynamically loaded here -->
@@ -138,6 +160,9 @@
             </div>
         </div>
     </footer>
+
+    <button id="back-to-top-btn" title="Go to top"><i data-lucide="arrow-up"></i></button>
+
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         lucide.createIcons();
